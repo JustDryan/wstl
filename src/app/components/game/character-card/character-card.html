@@ -1,0 +1,66 @@
+<button
+  type="button"
+  class="card"
+  [class.is-revealed]="revealed()"
+  [class.is-noting]="mode() === 'notes'"
+  [class.is-accusable]="canAccuse()"
+  [class.is-targetable]="targetable()"
+  [class.is-awaiting]="awaitingTarget()"
+  [class.is-unavailable]="unavailable()"
+  [attr.aria-disabled]="unavailable() || null"
+  [attr.aria-label]="label()"
+  (click)="onClick()"
+>
+  <span class="card-inner">
+    <span class="face back" aria-hidden="true">?</span>
+
+    <span class="face front" [class]="teamClass()" [class.shows-truth]="showTruth()" aria-hidden="true">
+      @if (stamp(); as s) {
+        <span [class]="'stamp ' + s">{{ s === 'thief' ? 'Thief' : 'Not the thief' }}</span>
+      }
+
+      @if (displayed(); as character) {
+        @if (!showTruth()) {
+          <span class="icon"><app-team-icon [team]="character.team" /></span>
+        }
+        <span class="name">{{ character.name }}</span>
+        <span class="team">{{ character.team }}</span>
+
+        @if (claimed(); as claimedName) {
+          <span class="claimed">Claimed: {{ claimedName }}</span>
+        }
+
+        @if (conditions().length) {
+          <span class="conditions">
+            @for (condition of conditions(); track condition) {
+              <span class="condition">{{ condition }}</span>
+            }
+          </span>
+        }
+
+        @for (line of statements(); track $index) {
+          <span class="statement" [class.is-true]="line.truth === true" [class.is-false]="line.truth === false">
+            @if (line.truth !== null) {
+              <span class="truth-mark">{{ line.truth ? '✓' : '✗' }}</span>
+            }
+            “{{ line.text }}”
+          </span>
+        }
+
+        @if (awaitingTarget()) {
+          <span class="prompt">Pick a face-down card</span>
+        }
+      }
+    </span>
+  </span>
+
+  <!-- Slot number and note sit outside card-inner so they don't flip with the card. -->
+  <span class="slot" aria-hidden="true">#{{ slot() }}</span>
+
+  @if (noteTag(); as tag) {
+    <span [class]="'note team-' + tag.team.toLowerCase()" aria-hidden="true">
+      <app-team-icon [team]="tag.team" />
+      <span class="note-text">{{ tag.text }}</span>
+    </span>
+  }
+</button>

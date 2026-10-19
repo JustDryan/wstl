@@ -1,0 +1,40 @@
+import { CharacterId } from "../game/characters";
+import { GAME_SETUP_VERSION, GameSetupData } from "../models/game-setup/game-setup.model";
+
+export const SAMPLE_PUZZLE_2: GameSetupData = {
+  version: GAME_SETUP_VERSION,
+  id: 'demo-1',
+  title: 'Demo puzzle',
+  seed: '1234',
+  grid: { rows: 3, cols: 3 },
+  maxGuesses: 2,
+  thiefId: 'c5',
+  script: [
+    CharacterId.Fighter, 
+    CharacterId.Squire, 
+    CharacterId.Leader,
+    CharacterId.Cleric,
+    CharacterId.ShieldBearer,
+    CharacterId.Clairvoyant,
+    CharacterId.Ledger,
+    CharacterId.GuildMaster,
+    CharacterId.Ranger,
+    CharacterId.Meddler, 
+    CharacterId.Sycophant, 
+    CharacterId.Drunk,
+    CharacterId.Looter, 
+    CharacterId.Bamboozler,
+    CharacterId.Goblin,
+    CharacterId.Hexxer],
+  characters: [
+    { id: 'c1', characterId: CharacterId.Leader, position: { row: 0, col: 0 } },
+    { id: 'c2', characterId: CharacterId.Cleric, position: { row: 0, col: 1 }, },
+    { id: 'c3', characterId: CharacterId.Hexxer, position: { row: 0, col: 2 } },
+    { id: 'c4', characterId: CharacterId.Squire, position: { row: 1, col: 0 } },
+    { id: 'c5', characterId: CharacterId.Mesmer, position: { row: 1, col: 1 } },
+    { id: 'c6', characterId: CharacterId.Drunk, position: { row: 1, col: 2 } },
+    { id: 'c7', characterId: CharacterId.Ranger, position: { row: 2, col: 0 } },
+    { id: 'c8', characterId: CharacterId.Ledger, position: { row: 2, col: 1 } },
+    { id: 'c9', characterId: CharacterId.Clairvoyant, position: { row: 2, col: 2 } },
+  ],
+};

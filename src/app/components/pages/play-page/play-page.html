@@ -1,0 +1,210 @@
+@if (game.setup(); as setup) {
+  <header class="topbar">
+    <img src="logo.svg"><h1>Who Stole the Loot?</h1>
+  </header>
+
+  <div class="layout">
+    <main class="play">
+      <div class="status">
+        <span class="puzzle-title">{{ setup.title }}</span>
+
+        <span class="status-right">
+          <span
+            class="guesses"
+            [attr.aria-label]="game.guessesLeft() + ' of ' + setup.maxGuesses + ' guesses remaining'"
+          >
+            <span aria-hidden="true">Guesses</span>
+            @for (slot of guessSlots(); track $index) {
+              <span class="pip" [class.used]="$index >= game.guessesLeft()" aria-hidden="true"></span>
+            }
+          </span>
+
+          @switch (game.status()) {
+            @case ('playing') {
+              <button
+                type="button"
+                class="accuse-button"
+                [attr.aria-pressed]="game.mode() === 'accuse'"
+                (click)="toggleAccuseMode()"
+              >
+                Accuse
+              </button>
+            }
+            @case ('won') {
+              <span class="outcome won">Solved!</span>
+            }
+            @case ('lost') {
+              <span class="outcome lost">Out of guesses</span>
+            }
+          }
+        </span>
+      </div>
+
+      <p class="hint">Flip cards to find the Scoundrels, then accuse the one you think has the loot.</p>
+
+      <app-game-grid
+        [game]="setup"
+        [revealedIds]="game.revealedIds()"
+        [accusedIds]="game.accusedIds()"
+        [solved]="game.solved()"
+        [locked]="game.isOver()"
+        [mode]="game.mode()"
+        [notes]="game.notes()"
+        [actionStatements]="game.actionStatements()"
+        [pendingActionId]="game.pendingActionId()"
+        [targetableIds]="targetableIds()"
+        (cardFlipped)="game.reveal($event)"
+        (cardInspected)="showCharacter($event)"
+        (cardNoted)="game.applyNote($event)"
+        (cardAccused)="requestAccusation($event)"
+        (cardTargeted)="game.chooseTarget($event)"
+      />
+
+      <button type="button" class="text-button" (click)="game.reset()">Reset board</button>
+    </main>
+
+    <div class="sidebar">
+      <aside class="panel script" aria-labelledby="script-heading">
+        <h2 id="script-heading">Script</h2>
+        @for (group of scriptGroups(); track group.team) {
+          <section [class]="'team-' + group.team.toLowerCase()">
+            <h3>
+              <app-team-icon [team]="group.team" />
+              <span class="team-name">{{ group.team }}</span>
+              <span class="in-play">{{ group.inPlay }} in play</span>
+            </h3>
+            <ul>
+              @for (character of group.characters; track character.id) {
+                <li>
+                  <button type="button" class="name-button" (click)="showCharacter(character.id)">
+                    {{ character.name }}
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </aside>
+
+      <section class="panel notes" aria-labelledby="notes-heading">
+        <div class="panel-head">
+          <h2 id="notes-heading">Notes</h2>
+          <button
+            type="button"
+            class="switch"
+            [attr.aria-pressed]="game.mode() === 'notes'"
+            (click)="toggleNotesMode()"
+          >
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            <span class="switch-label">Notes mode</span>
+          </button>
+        </div>
+
+        <p class="panel-help">Pick a label, then tap cards to mark them.</p>
+
+        <div class="chips" role="group" aria-label="Note labels">
+          @for (group of scriptGroups(); track group.team) {
+            <div class="chip-row" [class]="'team-' + group.team.toLowerCase()">
+              <button
+                type="button"
+                class="chip chip-team"
+                [attr.aria-pressed]="isTeamSelected(group.team)"
+                (click)="selectTeam(group.team)"
+              >
+                <app-team-icon [team]="group.team" />
+                {{ group.team }}
+              </button>
+            </div>
+            <div class="chip-row" [class]="'team-' + group.team.toLowerCase()">
+              @for (character of group.characters; track character.id) {
+                <button
+                  type="button"
+                  class="chip"
+                  [attr.aria-pressed]="isCharacterSelected(character.id)"
+                  (click)="selectCharacter(character.id)"
+                >
+                  {{ character.name }}
+                </button>
+              }
+            </div>
+          }
+
+          <div class="chip-row">
+            <button
+              type="button"
+              class="chip chip-clear"
+              [attr.aria-pressed]="isClearSelected()"
+              (click)="selectClear()"
+            >
+              <span aria-hidden="true">×</span> Clear
+            </button>
+          </div>
+        </div>
+
+        <button type="button" class="text-button small" (click)="game.clearNotes()">
+          Clear all notes
+        </button>
+      </section>
+    </div>
+  </div>
+
+  <!-- "Are you sure?" -->
+  <app-modal
+    [open]="pendingAccusation() !== null"
+    labelledBy="accuse-title"
+    (closed)="cancelAccusation()"
+  >
+    <div class="modal-body team-scoundrel">
+      <span class="modal-icon"><app-team-icon [team]="Alignment.Scoundrel" /></span>
+      <h2 id="accuse-title" class="shout">
+        Are you sure you want to accuse {{ pendingName() }} of stealing the loot?
+      </h2>
+      <p class="modal-detail">
+        This uses one of your {{ game.guessesLeft() }} remaining
+        {{ game.guessesLeft() === 1 ? 'guess' : 'guesses' }}.
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" (click)="cancelAccusation()">No</button>
+        <button type="button" class="btn danger" (click)="confirmAccusation()">Yes, accuse</button>
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- Result -->
+  <app-modal
+    [open]="resultView() !== null"
+    labelledBy="result-title"
+    (closed)="accusationResult.set(null)"
+  >
+    @if (resultView(); as r) {
+      <div class="modal-body result" [class.is-correct]="r.correct">
+        <h2 id="result-title" class="shout result-title">{{ r.title }}</h2>
+        <p class="result-message">{{ r.message }}</p>
+        <p class="modal-detail">{{ r.detail }}</p>
+        <div class="modal-actions">
+          @if (r.correct) {
+            <button type="button" class="btn secondary" (click)="accusationResult.set(null)">
+              Close
+            </button>
+            <button type="button" class="btn primary" (click)="revealSolution()">
+              Reveal the puzzle
+            </button>
+          } @else if (r.gameOver) {
+            <button type="button" class="btn primary" (click)="accusationResult.set(null)">
+              See the solution
+            </button>
+          } @else {
+            <button type="button" class="btn primary" (click)="accusationResult.set(null)">
+              Keep investigating
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </app-modal>
+
+  <app-character-info-dialog
+    [character]="selectedCharacter()"
+    (closed)="selectedCharacter.set(null)"
+  />
+}

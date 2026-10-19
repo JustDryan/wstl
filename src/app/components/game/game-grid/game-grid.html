@@ -1,0 +1,28 @@
+<ol class="grid" [style.--cols]="game().grid.cols" aria-label="Game board">
+  @for (cell of cells(); track cell.key) {
+    <li class="cell" [attr.aria-hidden]="cell.character ? null : true">
+      @if (cell.character; as character) {
+        <app-character-card
+          [game]="game()"
+          [character]="character"
+          [revealed]="solved() || revealedIds().has(character.id)"
+          [accused]="accusedIds().has(character.id)"
+          [solved]="solved()"
+          [locked]="locked()"
+          [mode]="mode()"
+          [note]="notes().get(character.id) ?? null"
+          [actionStatements]="actionStatements().get(character.id) ?? []"
+          [awaitingTarget]="pendingActionId() === character.id"
+          [targetable]="targetableIds().has(character.id)"
+          (flip)="cardFlipped.emit($event)"
+          (inspect)="cardInspected.emit($event)"
+          (noteRequested)="cardNoted.emit($event)"
+          (accuseRequested)="cardAccused.emit($event)"
+          (targetRequested)="cardTargeted.emit($event)"
+        />
+      } @else {
+        <span class="empty"><span class="slot">#{{ cell.slot }}</span></span>
+      }
+    </li>
+  }
+</ol>

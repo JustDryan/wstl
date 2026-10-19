@@ -1,0 +1,38 @@
+:host {
+  display: block;
+}
+
+.grid {
+  --cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: clamp(0.4rem, 1.5vw, 0.6rem);
+  /* Cards top out around 8rem wide, so small grids don't stretch huge. */
+  max-width: min(100%, calc(var(--cols) * 8rem));
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.cell {
+  min-width: 0;
+}
+
+.empty {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+/* Matches the slot number on cards. */
+.slot {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.6;
+}

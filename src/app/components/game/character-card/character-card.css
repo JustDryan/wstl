@@ -1,0 +1,323 @@
+:host {
+  display: block;
+  --flip-duration: 400ms;
+  --note-space: 1.6rem;
+}
+
+/* The whole card is one button so it works with keyboard and screen readers. */
+.card {
+  appearance: none;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  perspective: 900px;
+  border-radius: var(--radius);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Notes mode: clicks label the card, so show that it's in a different mode. */
+.card.is-noting {
+  cursor: copy;
+}
+
+@media (hover: hover) {
+  .card.is-noting:hover {
+    outline: 2px dashed var(--focus);
+    outline-offset: 3px;
+  }
+}
+
+/* Accuse mode: every card that can still be accused is highlighted. */
+.card.is-accusable {
+  outline: 3px solid var(--scoundrel);
+  outline-offset: 3px;
+  cursor: crosshair;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card.is-accusable {
+    animation: accuse-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes accuse-pulse {
+    50% {
+      outline-color: var(--scoundrel-tint);
+    }
+  }
+}
+
+/* Nothing happens on click: already accused (in accuse mode), or face down after the game ends. */
+.card.is-unavailable {
+  cursor: default;
+}
+
+/*
+ * In accuse and target modes, face-up cards you can't pick fade back so the
+ * remaining choices stand out. Faded on the face, not .card-inner: opacity on
+ * the 3D-flipped element flattens it and shows the back through, mirrored.
+ */
+.card.is-unavailable.is-revealed .front {
+  opacity: 0.55;
+}
+
+.card-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform var(--flip-duration) ease;
+}
+
+.card.is-revealed .card-inner {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  /* Space at the bottom keeps text clear of the note tag. */
+  padding: 0.45rem 0.45rem var(--note-space);
+  border-radius: var(--radius);
+  text-align: center;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ---- Back (face down) ---------------------------------------------------- */
+
+.back {
+  background: var(--card-back);
+  color: var(--card-back-mark);
+  font-size: clamp(1.4rem, 6vw, 2rem);
+  font-weight: 800;
+  transition: background-color 150ms ease;
+}
+
+@media (hover: hover) {
+  .card:not(.is-revealed):not(.is-noting):not(.is-unavailable):hover .back {
+    background: var(--card-back-hover);
+  }
+}
+
+.card:not(.is-revealed):not(.is-noting):not(.is-unavailable):active .card-inner {
+  transform: scale(0.97);
+}
+
+/* Target mode: the face-down cards an action (e.g. the Clairvoyant) can be used on. */
+.card.is-targetable {
+  outline: 3px solid var(--regular);
+  outline-offset: 3px;
+  cursor: crosshair;
+}
+
+/* The card whose action is waiting for a target. */
+.card.is-awaiting {
+  outline: 2px dashed var(--regular);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card.is-targetable {
+    animation: target-pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes target-pulse {
+    50% {
+      outline-color: var(--regular-tint);
+    }
+  }
+}
+
+/* ---- Front (revealed) ---------------------------------------------------- */
+
+.front {
+  transform: rotateY(180deg);
+  background: var(--surface);
+  border: 2px solid var(--team, var(--border));
+  box-shadow: inset 0 4px 0 var(--team, var(--border));
+  color: var(--text);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 1.9em;
+  height: 1.9em;
+  margin-bottom: 0.15rem;
+  border-radius: 50%;
+  background: var(--team-tint);
+  color: var(--team);
+  font-size: clamp(0.85rem, 2.6vw, 1.1rem);
+}
+
+.name {
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.team {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--team);
+}
+
+.statement {
+  margin-top: 0.2rem;
+  font-size: clamp(0.62rem, 1.8vw, 0.75rem);
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+
+/* ---- Truth: accused / solved cards --------------------------------------- */
+
+/* Leave room at the top for the stamp. */
+.front.shows-truth {
+  padding-top: 2.2rem;
+}
+
+.stamp {
+  position: absolute;
+  /* Below the slot number in the corner, so a wide stamp never overlaps it. */
+  top: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.stamp.thief {
+  background: var(--scoundrel);
+  color: var(--surface);
+}
+
+.stamp.not-thief {
+  background: var(--card-back);
+  color: var(--text-muted);
+}
+
+.claimed {
+  font-size: clamp(0.58rem, 1.7vw, 0.7rem);
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.conditions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.condition {
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--text-muted);
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.truth-mark {
+  margin-right: 0.1rem;
+  font-weight: 800;
+}
+
+.statement.is-true .truth-mark {
+  color: var(--truth);
+}
+
+.statement.is-false .truth-mark {
+  color: var(--scoundrel);
+}
+
+/* ---- Slot number (top-left corner) --------------------------------------- */
+
+.slot {
+  position: absolute;
+  z-index: 1;
+  /* Clear of the card border and the team stripe on revealed cards. */
+  top: 0.55rem;
+  left: 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* ---- Player note tag (bottom of the card) -------------------------------- */
+
+.note {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: 0.35rem;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: calc(100% - 0.6rem);
+  padding: 0.15rem 0.45rem;
+  border: 1.5px solid var(--team);
+  border-radius: 999px;
+  background: var(--team-tint);
+  color: var(--team);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.note-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-inner,
+  .back {
+    transition: none;
+  }
+}
+
+
+/* ---- Waiting for a target ------------------------------------------------- */
+
+.prompt {
+  margin-top: 0.35rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--regular-tint);
+  color: var(--regular);
+  font-size: clamp(0.58rem, 1.6vw, 0.68rem);
+  font-weight: 700;
+}

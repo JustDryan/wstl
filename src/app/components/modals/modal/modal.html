@@ -1,0 +1,11 @@
+<dialog
+  #dialog
+  class="dialog"
+  [attr.aria-labelledby]="labelledBy()"
+  (close)="closed.emit()"
+  (click)="onDialogClick($event)"
+>
+  <div class="content">
+    <ng-content />
+  </div>
+</dialog>

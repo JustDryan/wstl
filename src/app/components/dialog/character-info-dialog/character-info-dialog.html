@@ -1,0 +1,18 @@
+<dialog
+  #dialog
+  class="dialog"
+  aria-labelledby="character-info-title"
+  (close)="closed.emit()"
+  (click)="onDialogClick($event)"
+>
+  @if (character(); as character) {
+    <div class="content" [class]="'team-' + character.team.toLowerCase()">
+      <button type="button" class="close" aria-label="Close" (click)="close()">×</button>
+
+      <span class="icon"><app-team-icon [team]="character.team" /></span>
+      <h2 id="character-info-title">{{ character.name }}</h2>
+      <span class="team">{{ character.team }}</span>
+      <p class="description">{{ character.description }}</p>
+    </div>
+  }
+</dialog>
